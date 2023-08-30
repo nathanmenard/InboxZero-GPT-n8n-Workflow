@@ -5,7 +5,7 @@ Automate your email sorting in Gmail using GPT and n8n to achieve the coveted "I
 
 📷 **Flow Diagram**:
 
-![Flow Diagram]((https://drive.google.com/uc?export=view&id=1zH93sR707oF5HenGJrprXtinmLfsyrjI)
+![Flow Diagram](https://drive.google.com/uc?export=view&id=1zH93sR707oF5HenGJrprXtinmLfsyrjI)
 
 ---
 
