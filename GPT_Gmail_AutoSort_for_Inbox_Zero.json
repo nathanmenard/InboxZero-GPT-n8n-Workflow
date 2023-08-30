@@ -1,0 +1,324 @@
+{
+  "name": "GPT-Gmail AutoSort for Inbox Zero",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "00916217-835c-44ba-9d53-441fa545ff85",
+      "name": "ManualTrigger_StartWorkflow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "userName",
+              "value": "Nathan Menard"
+            },
+            {
+              "name": "userRole",
+              "value": "CEO - Currently in charge of Sales, Marketing and Drakkar's culture"
+            },
+            {
+              "name": "userCompany",
+              "value": "Drakkar"
+            },
+            {
+              "name": "companyUrl",
+              "value": "drakkar.io"
+            },
+            {
+              "name": "companyDescription",
+              "value": "13 people tech agency in Nantes, France that values partnerships with clients to create tailored solutions beyond just technical implementations"
+            },
+            {
+              "name": "companyAreasOfExpertise",
+              "value": "1. **Web & Mobile Solutions**:\n   - Expertise in web and mobile application development.\n   - Assists entrepreneurs and SMBs to penetrate new markets.\n   - Concentrates on crafting Version 2 (V2) of applications and overhauling existing apps to ensure scalability post product-market fit.\n\n2. **Business Digitization**:\n   - Mastery in optimizing business operations for SMBs.\n   - Leverages tools such as Odoo, no-code platforms, AI, and bespoke coding.\n   - Provides consulting, with a focus on business process reengineering."
+            },
+            {
+              "name": "userInterests",
+              "value": "Tech innovation, strategic business growth, AI advancements, content creation, and networking."
+            },
+            {
+              "name": "userGoals",
+              "value": "To advance the growth of Drakkar and stay updated with the latest in tech and AI that can provide strategic advantages."
+            },
+            {
+              "name": "noActionNeededLabel"
+            },
+            {
+              "name": "interestingNewsLabel"
+            },
+            {
+              "name": "importantInfoLabel"
+            },
+            {
+              "name": "needsResponseLabel"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "739ab2d7-ed5c-4376-aa94-edc696ddad37",
+      "name": "SetUserProfileData",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        820,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "limit": 5,
+        "filters": {
+          "q": "in:inbox"
+        }
+      },
+      "id": "6e1a1908-a3ec-46e6-89f2-8a5ee707584a",
+      "name": "Gmail_GetEmailOverviews",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        300
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "KakaCnT95iWxRvXw",
+          "name": "Le bon compte"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "get",
+        "threadId": "={{ $json.id }}",
+        "options": {}
+      },
+      "id": "1c736bce-e0f5-4169-8b7f-2a61af8c6470",
+      "name": "Gmail_GetEmailThreadDetails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        1260,
+        300
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "KakaCnT95iWxRvXw",
+          "name": "Le bon compte"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "model": "gpt-4",
+        "prompt": {
+          "messages": [
+            {
+              "content": "=**UserProfile**:\n- **Name**: {{ $('SetUserProfileData').item.json.UserName }}\n- **Role**: {{ $('SetUserProfileData').item.json.UserRole }} of {{ $('SetUserProfileData').item.json.UserCompany }}, a {{ $('SetUserProfileData').item.json.CompanyDescription }}.\n- **Company URL**: {{ $('SetUserProfileData').item.json.CompanyUrl }}\n- **Company Areas of Expertise**: {{ $('SetUserProfileData').item.json.CompanyAreasOfExpertise }}\n- **Interests**: {{ $('SetUserProfileData').item.json.UserInterests }}\n- **Goals**: {{ $('SetUserProfileData').item.json.UserGoals }}\n\n**Instructions**:\n\n1. **Analyze Fields**: Examine the email thread JSON, specifically focusing on the `From`, `Subject`, `To`, `Cc`, and `snippet` (`snippet` is a brief preview of the email contentfields).\n\n2. **Internal Communication**: If the sender's email domain matches {{ $('SetUserProfileData').item.json.CompanyUrl }}, treat the email as internal communication and give it priority.\n\n3. **Relevance Criteria**: Use the UserProfile data, the sender's email address, the email subject, and the snippet to assess the relevance and potential impact of the email on {{ $('SetUserProfileData').item.json.UserName }} or {{ $('SetUserProfileData').item.json.UserCompany }}.\n\n4. **Status Categorization**: Categorize the email into **exactly one** of the four statuses. Do **not** use any other terms. The four statuses are:\n- `needsResponse`: The email requires a direct response or action from {{ $('SetUserProfileData').item.json.UserName }}.\n- `importantInfo`: The email conveys essential organizational or business information beneficial for {{ $('SetUserProfileData').item.json.UserName }} but doesn't require a response.\n- `interestingNews`: The email contains noteworthy information or updates that might interest {{ $('SetUserProfileData').item.json.UserName }} but doesn't require a response.\n- `noActionNeeded`: The email doesn't require any response or action, and isn't significant in terms of content or updates.\n\n5. **Thread Analysis**: If the thread has multiple emails, prioritize the content of the latest email but also consider the context of the entire thread to determine its most appropriate status.\n\n6. **Output Formatting**: The output **must** be structured as follows. Any deviation will be considered an error:\n    ```\n    {\n      status: \"<statusName>\",\n      reason: \"<briefExplanation>\"\n    }\n    ```\n   The `<statusName>` should be one of the four categories, and `<briefExplanation>` should be a succinct justification for the assigned status.\n\n7. **Accuracy Requirement**: Absolute accuracy in classification is critical. Any errors could have serious consequences.\n\n**Email thread**:\n{{ JSON.stringify($json.messages) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "973607ef-f24c-4bd8-ab4c-ce5cc7bf5c75",
+      "name": "GPT4_EmailCategorization",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        300
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "dn57Rw9PICrbPbsV",
+          "name": "OpenAi Nathan Menard Drakkar"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "={{ JSON.parse($json.message.content)[\"status\"] }}"
+            },
+            {
+              "name": "reason",
+              "value": "={{ JSON.parse($json.message.content)[\"reason\"] }}"
+            },
+            {
+              "name": "snippet",
+              "value": "={{ $('Gmail_GetEmailOverviews').item.json.snippet }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "555ba3fd-9123-48a5-8829-c9f85b119add",
+      "name": "SetParsedGPT4Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "isEmpty"
+            },
+            {
+              "value1": "={{ $json.reason }}",
+              "operation": "isEmpty"
+            }
+          ]
+        },
+        "combineOperation": "any"
+      },
+      "id": "ecf71f7a-79a1-49ee-8381-47b8d2ea7930",
+      "name": "If_InvalidGPT4Output",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "addLabels",
+        "threadId": "={{ \n  ($json.status === \"noActionNeeded\") ? $('SetUserProfileData').item.json.noActionNeededLabel :\n  ($json.status === \"interestingNews\") ? $('SetUserProfileData').item.json.interestingNewsLabel :\n  ($json.status === \"importantInfo\") ? $('SetUserProfileData').item.json.importantInfoLabel :\n  $('SetUserProfileData').item.json.needsResponseLabel \n}} ",
+        "labelIds": "={{ $('SetParsedGPT4Output').item.json.status }}"
+      },
+      "id": "becf405a-0ebd-4c19-a48e-2368bcaec051",
+      "name": "Gmail_ApplyEmailLabels",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        320
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "KakaCnT95iWxRvXw",
+          "name": "Le bon compte"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "ManualTrigger_StartWorkflow": {
+      "main": [
+        [
+          {
+            "node": "SetUserProfileData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SetUserProfileData": {
+      "main": [
+        [
+          {
+            "node": "Gmail_GetEmailOverviews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail_GetEmailOverviews": {
+      "main": [
+        [
+          {
+            "node": "Gmail_GetEmailThreadDetails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail_GetEmailThreadDetails": {
+      "main": [
+        [
+          {
+            "node": "GPT4_EmailCategorization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT4_EmailCategorization": {
+      "main": [
+        [
+          {
+            "node": "SetParsedGPT4Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SetParsedGPT4Output": {
+      "main": [
+        [
+          {
+            "node": "If_InvalidGPT4Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If_InvalidGPT4Output": {
+      "main": [
+        [
+          {
+            "node": "GPT4_EmailCategorization",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail_ApplyEmailLabels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9106a38f-45e5-4a0f-80fd-ffd345e43936",
+  "id": "SadITu0TFOgpsfdZ",
+  "meta": {
+    "instanceId": "9045866b66c08a4dcbb475a8f7e2764b20b26a9b79f034f18f4fb1cdee85eea6"
+  },
+  "tags": []
+}
