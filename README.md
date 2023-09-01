@@ -40,10 +40,10 @@ Automate your Gmail inbox with GPT and n8n. This workflow sorts, labels, and org
 
 ### 6. Create Gmail Labels
 - Rename or create Gmail labels as follows:
-  1. `n8nNoActionNeeded`
-  2. `n8nInterestingNews`
-  3. `n8nImportantInfo`
-  4. `n8nNeedsResponse`
+  1. `n8nNeedsResponse`
+  2. `n8nImportantInfo`
+  3. `n8nInterestingNews`
+  4. `n8nNoActionNeeded`
   5. `n8nError`
 
 ### 5. Fetch Gmail Label IDs
