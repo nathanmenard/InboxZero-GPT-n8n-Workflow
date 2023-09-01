@@ -3,13 +3,13 @@
   "nodes": [
     {
       "parameters": {},
-      "id": "00916217-835c-44ba-9d53-441fa545ff85",
+      "id": "030051c3-1be3-4863-9dac-30a0e5916afa",
       "name": "ManualTrigger_StartWorkflow",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        600,
-        300
+        1500,
+        -220
       ]
     },
     {
@@ -18,7 +18,7 @@
           "string": [
             {
               "name": "userName",
-              "value": "Nathan Menard"
+              "value": "Bob "
             },
             {
               "name": "userRole",
@@ -59,40 +59,43 @@
             },
             {
               "name": "needsResponseLabel"
+            },
+            {
+              "name": "errorLabel"
             }
           ]
         },
         "options": {}
       },
-      "id": "739ab2d7-ed5c-4376-aa94-edc696ddad37",
+      "id": "55369ada-7a7e-4e0c-ab32-d3e45c298b1b",
       "name": "SetUserProfileData",
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        820,
-        300
+        1720,
+        -220
       ]
     },
     {
       "parameters": {
         "resource": "thread",
-        "limit": 5,
+        "limit": 20,
         "filters": {
           "q": "in:inbox"
         }
       },
-      "id": "6e1a1908-a3ec-46e6-89f2-8a5ee707584a",
+      "id": "4f75ffa6-e2a0-45ca-9876-eb53e3354903",
       "name": "Gmail_GetEmailOverviews",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        1040,
-        300
+        1960,
+        -220
       ],
       "credentials": {
         "gmailOAuth2": {
-          "id": "KakaCnT95iWxRvXw",
-          "name": "Le bon compte"
+          "id": "bt4lJXaMc3b8Xndm",
+          "name": "Gmail account"
         }
       }
     },
@@ -103,48 +106,99 @@
         "threadId": "={{ $json.id }}",
         "options": {}
       },
-      "id": "1c736bce-e0f5-4169-8b7f-2a61af8c6470",
+      "id": "0ef14bbb-4cf3-4f6e-b172-5ead1e227402",
       "name": "Gmail_GetEmailThreadDetails",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        1260,
-        300
+        2180,
+        -220
       ],
       "credentials": {
         "gmailOAuth2": {
-          "id": "KakaCnT95iWxRvXw",
-          "name": "Le bon compte"
+          "id": "bt4lJXaMc3b8Xndm",
+          "name": "Gmail account"
         }
       }
     },
     {
       "parameters": {
         "resource": "chat",
-        "model": "gpt-4",
+        "model": "=gpt-4",
         "prompt": {
           "messages": [
             {
-              "content": "=**UserProfile**:\n- **Name**: {{ $('SetUserProfileData').item.json.UserName }}\n- **Role**: {{ $('SetUserProfileData').item.json.UserRole }} of {{ $('SetUserProfileData').item.json.UserCompany }}, a {{ $('SetUserProfileData').item.json.CompanyDescription }}.\n- **Company URL**: {{ $('SetUserProfileData').item.json.CompanyUrl }}\n- **Company Areas of Expertise**: {{ $('SetUserProfileData').item.json.CompanyAreasOfExpertise }}\n- **Interests**: {{ $('SetUserProfileData').item.json.UserInterests }}\n- **Goals**: {{ $('SetUserProfileData').item.json.UserGoals }}\n\n**Instructions**:\n\n1. **Analyze Fields**: Examine the email thread JSON, specifically focusing on the `From`, `Subject`, `To`, `Cc`, and `snippet` (`snippet` is a brief preview of the email contentfields).\n\n2. **Internal Communication**: If the sender's email domain matches {{ $('SetUserProfileData').item.json.CompanyUrl }}, treat the email as internal communication and give it priority.\n\n3. **Relevance Criteria**: Use the UserProfile data, the sender's email address, the email subject, and the snippet to assess the relevance and potential impact of the email on {{ $('SetUserProfileData').item.json.UserName }} or {{ $('SetUserProfileData').item.json.UserCompany }}.\n\n4. **Status Categorization**: Categorize the email into **exactly one** of the four statuses. Do **not** use any other terms. The four statuses are:\n- `needsResponse`: The email requires a direct response or action from {{ $('SetUserProfileData').item.json.UserName }}.\n- `importantInfo`: The email conveys essential organizational or business information beneficial for {{ $('SetUserProfileData').item.json.UserName }} but doesn't require a response.\n- `interestingNews`: The email contains noteworthy information or updates that might interest {{ $('SetUserProfileData').item.json.UserName }} but doesn't require a response.\n- `noActionNeeded`: The email doesn't require any response or action, and isn't significant in terms of content or updates.\n\n5. **Thread Analysis**: If the thread has multiple emails, prioritize the content of the latest email but also consider the context of the entire thread to determine its most appropriate status.\n\n6. **Output Formatting**: The output **must** be structured as follows. Any deviation will be considered an error:\n    ```\n    {\n      status: \"<statusName>\",\n      reason: \"<briefExplanation>\"\n    }\n    ```\n   The `<statusName>` should be one of the four categories, and `<briefExplanation>` should be a succinct justification for the assigned status.\n\n7. **Accuracy Requirement**: Absolute accuracy in classification is critical. Any errors could have serious consequences.\n\n**Email thread**:\n{{ JSON.stringify($json.messages) }}"
+              "content": "=**UserProfile**:\n- **Name**: {{ $('SetUserProfileData').item.json.UserName }}\n- **Role**: {{ $('SetUserProfileData').item.json.UserRole }} of {{ $('SetUserProfileData').item.json.UserCompany }}, a {{ $('SetUserProfileData').item.json.CompanyDescription }}.\n- **Company URL**: {{ $('SetUserProfileData').item.json.CompanyUrl }}\n- **Company Areas of Expertise**: {{ $('SetUserProfileData').item.json.CompanyAreasOfExpertise }}\n- **Interests**: {{ $('SetUserProfileData').item.json.UserInterests }}\n- **Goals**: {{ $('SetUserProfileData').item.json.UserGoals }}\n\n**Instructions**:\nPlease follow the instructions below explicitly. Return your output strictly in the JSON format outlined in point 6. Any deviation will trigger a reprocessing loop.\n\n1. **Analyze Fields**: Examine the email thread JSON, specifically focusing on the `From`, `Subject`, `To`, `Cc`, and `snippet` (`snippet` is a brief preview of the email contentfields).\n\n2. **Internal Communication**: If the sender's email domain matches {{ $('SetUserProfileData').item.json.CompanyUrl }}, treat the email as internal communication and give it priority.\n\n3. **Relevance Criteria**: Use the UserProfile data, the sender's email address, the email subject, and the snippet to assess the relevance and potential impact of the email on {{ $('SetUserProfileData').item.json.UserName }} or {{ $('SetUserProfileData').item.json.UserCompany }}.\n\n4. **Status Categorization**: Categorize the email into **exactly one** of the four statuses. Do **not** use any other terms. The four statuses are:\n- `needsResponse`: The email requires a direct response or action from {{ $('SetUserProfileData').item.json.UserName }}.\n- `importantInfo`: The email conveys essential organizational or business information beneficial for {{ $('SetUserProfileData').item.json.UserName }} but doesn't require a response.\n- `interestingNews`: The email contains noteworthy information or updates that might interest {{ $('SetUserProfileData').item.json.UserName }} but doesn't require a response.\n- `noActionNeeded`: The email doesn't require any response or action, and isn't significant in terms of content or updates.\n\n5. **Thread Analysis**: If the thread has multiple emails, prioritize the content of the latest email but also consider the context of the entire thread to determine its most appropriate status.\n\n6. **Output Formatting**: The output **must** be structured as follows and contain **only** these informations. Any deviation will be considered an error. Don't add anything else (eg \"From\") to your answer. Don't use markdown in your answer.\n    ```\n    {\n      status: \"<statusName>\",\n      reason: \"<briefExplanation>\"\n    }\n    ```\n   The `<statusName>` should be one of the four categories, and `<briefExplanation>` should be a succinct justification for the assigned status.\n\n7. **Accuracy Requirement**: Absolute accuracy in classification is critical. Any errors could have serious consequences.\n\n**Email thread**:\n{{ JSON.stringify($json.messages) }}"
             }
           ]
         },
         "options": {}
       },
-      "id": "973607ef-f24c-4bd8-ab4c-ce5cc7bf5c75",
+      "id": "f4e35c8f-58e3-412d-87b9-9f181b3c5d4d",
       "name": "GPT4_EmailCategorization",
       "type": "n8n-nodes-base.openAi",
       "typeVersion": 1,
       "position": [
-        1460,
-        300
+        2400,
+        -220
       ],
       "credentials": {
         "openAiApi": {
-          "id": "dn57Rw9PICrbPbsV",
-          "name": "OpenAi Nathan Menard Drakkar"
+          "id": "L1ibBxvROgkbapWO",
+          "name": "OpenAi account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "addLabels",
+        "threadId": "={{ $('Gmail_GetEmailThreadDetails').item.json.id }}",
+        "labelIds": "={{ $json.labelId }}"
+      },
+      "id": "f9755ce2-fe3c-4e34-aeb3-b158fb52bda6",
+      "name": "Gmail_ApplyEmailLabels",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        -220
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bt4lJXaMc3b8Xndm",
+          "name": "Gmail account"
         }
       }
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "prompt": {
+          "messages": [
+            {
+              "content": "=You are specialized to perform a singular task: to rigorously format incoming JSON objects, ensuring 100% compliance with a predefined schema.\n\nInput Source: You will receive email thread data analyzed by GPT-4, which categorizes emails into one of the following four statuses:\n- importantInfo\n- interestingNews\n- needsResponse\n- noActionNeeded\n\nThe expected JSON format is as follows:\n{ \"status\": \"<The status must be one of 'importantInfo', 'interestingNews', 'needsResponse', or 'noActionNeeded'>\", \n  \"reason\": \"<Plain English text with no markdown syntax>\"\n}\n\nHowever, due to long threads or other errors, you might encounter:\n- Missing or incomplete 'status' or 'reason'\n- Extraneous text\n- Empty input\n- Incorrectly formatted input\n- If the input is already accurate, simply echo it back.\n\nResponse Rules:\n1.Complete or Empty: If the JSON object is incomplete, missing, or lacks either 'status' or 'reason', output an empty JSON object {}.\n2. Status Conformity: The 'status' field must match one of the four predefined categories. Any deviation results in an empty JSON object {}.\n3. Markdown-Free Zone: Strip any markdown syntax present in the 'reason' field.\n4. JSON Only: Your response must exclusively be a JSON object. Text outside this format is unacceptable.\n\nZero Tolerance Policy: Any deviation from these guidelines will result in an empty JSON object {}.\n\n// Input Start //\n{{ $json.message.content }}\n// Input End // "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b81d021c-49d8-46b9-89b7-310b7085a62f",
+      "name": "GPT3.5_EmailCategorization_FormatFix",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        2620,
+        -220
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "L1ibBxvROgkbapWO",
+          "name": "OpenAi account"
+        }
+      },
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -162,66 +216,23 @@
             {
               "name": "snippet",
               "value": "={{ $('Gmail_GetEmailOverviews').item.json.snippet }}"
+            },
+            {
+              "name": "labelId",
+              "value": "={{ \n  (JSON.parse($json.message.content)[\"status\"] == undefined || JSON.parse($json.message.content)[\"status\"] == \"\") ? $('SetUserProfileData').item.json.errorLabel :\n  (JSON.parse($json.message.content)[\"status\"] == \"noActionNeeded\") ? $('SetUserProfileData').item.json.noActionNeededLabel :\n  (JSON.parse($json.message.content)[\"status\"] == \"interestingNews\") ? $('SetUserProfileData').item.json.interestingNewsLabel :\n  (JSON.parse($json.message.content)[\"status\"] == \"importantInfo\") ? $('SetUserProfileData').item.json.importantInfoLabel :\n  $('SetUserProfileData').item.json.needsResponseLabel\n}}"
             }
           ]
         },
         "options": {}
       },
-      "id": "555ba3fd-9123-48a5-8829-c9f85b119add",
-      "name": "SetParsedGPT4Output",
+      "id": "a0f585c5-3763-4eb1-9a32-ee581a6f0c98",
+      "name": "SetParsedGPT3.5Output",
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        1680,
-        300
+        2840,
+        -220
       ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "string": [
-            {
-              "value1": "={{ $json.status }}",
-              "operation": "isEmpty"
-            },
-            {
-              "value1": "={{ $json.reason }}",
-              "operation": "isEmpty"
-            }
-          ]
-        },
-        "combineOperation": "any"
-      },
-      "id": "ecf71f7a-79a1-49ee-8381-47b8d2ea7930",
-      "name": "If_InvalidGPT4Output",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
-      "position": [
-        1920,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "thread",
-        "operation": "addLabels",
-        "threadId": "={{ \n  ($json.status === \"noActionNeeded\") ? $('SetUserProfileData').item.json.noActionNeededLabel :\n  ($json.status === \"interestingNews\") ? $('SetUserProfileData').item.json.interestingNewsLabel :\n  ($json.status === \"importantInfo\") ? $('SetUserProfileData').item.json.importantInfoLabel :\n  $('SetUserProfileData').item.json.needsResponseLabel \n}} ",
-        "labelIds": "={{ $('SetParsedGPT4Output').item.json.status }}"
-      },
-      "id": "becf405a-0ebd-4c19-a48e-2368bcaec051",
-      "name": "Gmail_ApplyEmailLabels",
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2,
-      "position": [
-        2240,
-        320
-      ],
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "KakaCnT95iWxRvXw",
-          "name": "Le bon compte"
-        }
-      }
     }
   ],
   "pinData": {},
@@ -274,33 +285,26 @@
       "main": [
         [
           {
-            "node": "SetParsedGPT4Output",
+            "node": "GPT3.5_EmailCategorization_FormatFix",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "SetParsedGPT4Output": {
+    "GPT3.5_EmailCategorization_FormatFix": {
       "main": [
         [
           {
-            "node": "If_InvalidGPT4Output",
+            "node": "SetParsedGPT3.5Output",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "If_InvalidGPT4Output": {
+    "SetParsedGPT3.5Output": {
       "main": [
-        [
-          {
-            "node": "GPT4_EmailCategorization",
-            "type": "main",
-            "index": 0
-          }
-        ],
         [
           {
             "node": "Gmail_ApplyEmailLabels",
@@ -315,10 +319,10 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "9106a38f-45e5-4a0f-80fd-ffd345e43936",
-  "id": "SadITu0TFOgpsfdZ",
+  "versionId": "576b8bb5-4b10-47cf-ac53-02fe98e3884b",
+  "id": "SzHADCooFM9KycBs",
   "meta": {
-    "instanceId": "9045866b66c08a4dcbb475a8f7e2764b20b26a9b79f034f18f4fb1cdee85eea6"
+    "instanceId": "16f8cdf23259e5fc6996dfddc71d43a682268e69f5bcb80045297bed91dfd9ed"
   },
   "tags": []
 }
