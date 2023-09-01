@@ -1,78 +1,75 @@
 # InboxZero-GPT-n8n-Workflow
-Automate your email sorting in Gmail using GPT and n8n to achieve the coveted "Inbox Zero" status. This workflow is designed to automatically sort, label, and organize your emails to declutter your inbox efficiently.
+Automate your Gmail inbox with GPT and n8n. This workflow sorts, labels, and organizes your emails for a streamlined "Inbox Zero" experience.
 
-🎬 **Watch the Tutorial**: [How to set up Inbox Zero GPT Workflow](...)
+🎬 **Tutorial Video**: [Inbox Zero GPT Workflow Setup](...)
 
-📷 **Flow Diagram**:
-
-![Flow Diagram](https://drive.google.com/uc?export=view&id=1zH93sR707oF5HenGJrprXtinmLfsyrjI)
+📷 **Flow Diagram**:  
+![Flow Diagram](https://drive.google.com/uc?export=view&id=1sWfQE_f8TPOUE2m7voGMtDKmZ2EunE49)
 
 ---
 
 # Installation Guide
 
+## Step-by-Step Instructions
 
-## Step-by-Step Setup
+### 1. Set Up n8n
+- [Register for an n8n account](https://n8n.io/?ref=nzyxngm&utm_source=affiliate).
+- Download `GPT_Gmail_AutoSort_for_Inbox_Zero.json` from this repository.
+- In n8n, click "Import from File..." in the top-right and upload the JSON file.
+- In the `SetUserProfileData` node, configure all fields except the label fields.
 
-### 1. Get GPT API Key
-- Go to [OpenAI's signup page](https://platform.openai.com).
-- Complete the signup process and obtain your GPT API key.
-- Save this API key, as you'll need it to configure the n8n workflow.
+### 2. Obtain GPT API Key
+- [Register at OpenAI](https://platform.openai.com) and get your GPT API key.
+- Insert the API key into the workflow's GPT node.
 
-### 2. Get Gmail OAuth for n8n
-- Visit the [Google Developer Console](https://console.developers.google.com/).
-- Create a new project and navigate to "Credentials".
-- Enable the Gmail API and configure OAuth consent screen.
-- Download the JSON file which includes your OAuth 2.0 Client IDs and Client Secret.
-- Store these credentials safely for later use in n8n.
+### 3. Configure Gmail OAuth in n8n
+- In n8n, click a Gmail node, add an account, and copy the "OAuth Redirect URL."
+- Go to [Google Developer Console](https://console.developers.google.com/).
+- Create a new project, go to "Credentials," enable Gmail API, and configure the OAuth consent screen.
+- Download the JSON file containing your OAuth 2.0 Client IDs and Secret.
 
-### 3. Create n8n Account
-- Sign up for an n8n account [here](https://n8n.io/?ref=nzyxngm&utm_source=affiliate).
-- Once registered, install the n8n software according to their documentation.
+### 4. Set Gmail Shortcuts (Azerty French Version)
+- Open Gmail settings and navigate to "See all settings."
+- Enable "Keyboard shortcuts" if they are not activated.
+- Configure keyboard shortcuts as follows for the French AZERTY layout:
+  - Archive: `e`
+  - Reply All: `a`
+  - Reply: `r`
+  - Label: `l`
+  - Navigate: `j` and `k`
 
-### 4. Initial n8n Setup
-- Open n8n and initiate a new workflow.
-- Replace placeholder values in the first set of nodes with your GPT API key and Gmail OAuth credentials.
+### 6. Create Gmail Labels
+- Rename or create Gmail labels as follows:
+  1. `n8nNoActionNeeded`
+  2. `n8nInterestingNews`
+  3. `n8nImportantInfo`
+  4. `n8nNeedsResponse`
+  5. `n8nError`
 
-### 5. Activate Shortcuts for Inbox Zero (Azerty French Version)
-- In Gmail settings, go to "See all settings".
-- Go to "Keyboard shortcuts" and configure them as follows (French AZERTY layout):
-    - Archive: `e`
-    - Answer all: `a`
-    - Answer: `r`
-    - Label: `l`
-    - Navigate Emails: `j` and `k`
+### 5. Fetch Gmail Label IDs
+- In n8n, create a new Gmail node with the "Get many labels" action.
+- Select the 5 label IDs that correspond to the labels you created.
+- Insert these IDs into the `SetUserProfileData` node and then remove the Gmail node you created.
 
-### 6. Get Gmail Label IDs for n8n
-- In Gmail, right-click on a label and select "Label color" then "Label code".
-- Copy the label IDs for each label you want to use.
-- Add these IDs to the respective Gmail nodes in your n8n workflow.
+### 6. Set Up Multiple Inboxes in Gmail
+- In Gmail settings, go to the "Inbox" tab.
+- Enable "Multiple Inboxes" and set up the sections using label queries like "l:n8nError in:inbox."
 
-### 7. Gmail Inbox Setup
-- Create or rename labels in Gmail as follows:
-    1. `noActionNeeded`
-    2. `interestingNews`
-    3. `importantInfo`
-    4. `needsResponse`
-- Update the Gmail nodes in n8n to use these label IDs for sorting.
+### 7. Test the Workflow
+- In the Gmail node titled "Gmail_GetEmailOverviews" in n8n, set the email limit to 5-10.
+- Run the workflow to check that it sorts and labels emails properly.
 
-### 8. Testing the Workflow
-- In the Gmail node titled "Gmail_GetEmailOverviews" in n8n, set the limit to 5-10 emails.
-- Run the workflow in n8n to ensure it sorts and labels emails as expected.
-
-### 9. Run it Full
-- Once testing is successful, remove or adjust the email limit in "Gmail_GetEmailOverviews".
-- Execute the workflow to sort your full inbox.
-
----
-
-# Usage
-After setting up the workflow, any new or existing email in your Gmail inbox will automatically be sorted and labeled according to the rules you've defined.
-
-For more information and troubleshooting, refer to the [tutorial video](...).
+### 8. Go Live
+- Once the testing is satisfactory, remove or adjust the email limit.
+- Execute the workflow to organize your full inbox.
 
 ---
 
-Feel free to fork, star, and contribute to this repository.
+# How to Use
+After setup, your Gmail inbox will automatically sort and label new and existing emails.
 
-Enjoy your organized inbox! 💌
+For troubleshooting and more, refer to the [tutorial video](...).
+
+---
+
+Feel free to fork, star, and contribute to this repository. Enjoy a cleaner inbox! 💌
